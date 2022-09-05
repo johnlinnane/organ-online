@@ -1,53 +1,62 @@
+$(document).ready(function(){
+    $('#dropdown').trigger('change');
+});
+
+
+let selectedKey = 'C';
+
 const chromaticNotes = ['C', 'C#', 'D','D#', 'E', 'F', 'F#', 'G','G#', 'A', 'A#', 'B'];
-
-const majorTriad = [0, 6, 9];
-const minorTriad = [0, 5, 9];
-const dimTriad = [0, 5, 8];
-
 
 const majorScaleDegrees = [0, 2, 4, 5, 7, 9, 11];
 const minorScaleDegrees = [0, 2, 3, 5, 7, 8, 10];
 
-
-
 let allKeysAndChords = {}
-// for example C
 
-// get the notes of the scale
-
-// go through all the chromatic notes
 chromaticNotes.forEach((note, i) => {
+    // MAJOR
     let thisMajorScale = [];
-    // majorScaleDegrees.forEach((degree) => {
-    //     thisMajorScale.push(chromaticNotes[degree % chromaticNotes.length]);
-    // })
+    majorScaleDegrees.forEach((degree) => {
+        thisMajorScale.push(chromaticNotes[(degree + i) % chromaticNotes.length]);
+    })
 
-    for (let j = i; j < majorScaleDegrees.length + i; j++) {
-        
-        thisMajorScale.push(chromaticNotes[j % chromaticNotes.length]);
-    }
-
+    allKeysAndChords[note] = {}
+    thisMajorScale.forEach( (rootNote, i) => {
+        let triad = [thisMajorScale[0 + i], thisMajorScale[(2 + i) % thisMajorScale.length], thisMajorScale[(4 + i) % thisMajorScale.length]];
+        if (i == 7) {
+            // dim
+            allKeysAndChords[note][`${rootNote}dim`] = triad;
+        } else if (i == 0 | i == 3 | i == 4) {
+            // major
+            allKeysAndChords[note][rootNote] = triad;
+        } else {
+            allKeysAndChords[note][`${rootNote}m`] = triad;
+        }
+    })
     
-    console.log('thisMajorScale: ',thisMajorScale);
-    
-    allKeysAndChords[note] = thisMajorScale
-
+    // MINOR
+    let thisMinorScale = [];
+    minorScaleDegrees.forEach((degree) => {
+        thisMinorScale.push(chromaticNotes[(degree + i) % chromaticNotes.length]);
+    })
     allKeysAndChords[`${note}m`] = {}
-    
+    thisMinorScale.forEach( (rootNote, i) => {
+        let triad = [thisMinorScale[0 + i], thisMinorScale[(2 + i) % thisMinorScale.length], thisMinorScale[(4 + i) % thisMinorScale.length]];
+        if (i == 2) {
+            allKeysAndChords[`${note}m`][`${rootNote}dim`] = triad;
+        } else if (i == 2 | i == 5 | i == 6) {
+            allKeysAndChords[`${note}m`][rootNote] = triad;
+        } else {
+            allKeysAndChords[`${note}m`][`${rootNote}m`] = triad;
+        }
 
-
+    })
 })
-
-
-console.log('allKeysAndChords: ',allKeysAndChords);
-
 
 const keys = [];
 chromaticNotes.forEach((note) => {
     keys.push(note);
     keys.push(`${note}m`);
 })
-
 
 keys.forEach( (key, i) => {
     var optElement = document.createElement('option');
@@ -56,71 +65,29 @@ keys.forEach( (key, i) => {
     document.getElementById('dropdown').appendChild(optElement);
 })
 
-const chords = ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'];
+const chords = allKeysAndChords[selectedKey];
 const cont = document.getElementById('note-container');
 
-
-chords.forEach( (chord, i) => {
-    var divElement = document.createElement('div');
-    divElement.innerText = chord;
-    // divElement.style.borderRadius = "10px";
-
-    divElement.addEventListener('click', function(){
-        console.log(chord);
-        playChord(chord);
-    });
-    cont.appendChild(divElement);
-
-    
-
-})
-
-
-const chordsNotes = {
-    'C': ["C4", "E4", "G4"],
-    'Dm': ["D4", "F4", "A4"],
-    'Em': ["B4", "E4", "G4"],
-    'F': ["C4", "F4", "A4"],
-    'G': ["B4", "D4", "G4"],
-    'Am': ["C4", "E4", "A4"],
-    'Bdim': ["B4", "D4", "F4"]
-}
-
-
-function playChord(chord) {
+function playChord(triad) {
+    triad = triad.map(i => `${i}4`);
     const synth = new Tone.PolySynth().toDestination();
-    // set the attributes across all the voices using 'set'
-    // synth.set({ detune: -1200 });
-    synth.fadeOut = 1; // value is in seconds
-
-    // play a chord
-    synth.triggerAttackRelease(chordsNotes[chord], 2);
-
-
-
-
+    synth.set({ detune: -1200 });
+    synth.triggerAttackRelease(triad, 2);
 }
 
-function changeKey(key) {
-    console.log('key changed to ' + key)
-    const chords = ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'];
+$('#dropdown').change(function(){ 
+    let newKey = $(this).val();
+    selectedKey = newKey;
     const cont = document.getElementById('note-container');
-    
     cont.innerHTML = '';
-    chords.forEach( (chord, i) => {
+    for (const [chordName, triad] of Object.entries(allKeysAndChords[newKey])) {
+        console.log(`triad: ${triad}`);
         var divElement = document.createElement('div');
-        divElement.innerText = chord;
-        // divElement.style.borderRadius = "10px";
-
+        divElement.innerText = chordName;
+        divElement.style.borderRadius = "10px";
         divElement.addEventListener('click', function(){
-            console.log(chord);
-            playChord(chord);
+            playChord(triad);
         });
-        
-
         cont.appendChild(divElement);
-
-        
-
-    })
-}
+    }
+});
