@@ -29,3 +29,13 @@ body {
     font-size: 30px;
     border-radius: 10px;
 }
+
+#select-container {
+    
+    text-align: center;
+}
+
+#dropdown {
+    width: 20%; 
+    text-align: center;
+}

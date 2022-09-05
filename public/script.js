@@ -81,7 +81,6 @@ $('#dropdown').change(function(){
     const cont = document.getElementById('note-container');
     cont.innerHTML = '';
     for (const [chordName, triad] of Object.entries(allKeysAndChords[newKey])) {
-        console.log(`triad: ${triad}`);
         var divElement = document.createElement('div');
         divElement.innerText = chordName;
         divElement.style.borderRadius = "10px";
